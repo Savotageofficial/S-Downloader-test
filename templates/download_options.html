@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>S-Downloader</title>
     <style>
         *{
             font-family: Arial;
@@ -12,10 +12,10 @@
             position: fixed;
             top: 0;
             left: 0;
-            min-width: 100%;
-            min-height: 100%;
-            width: fit-content;
-            height: fit-content;
+            max-width: 100%;
+            {#max-height: 100%;#}
+            {#width: fit-content;#}
+            {#height: fit-content;#}
             z-index: -1; /* behind content */
             {#object-fit: cover; /* cover the screen */#}
         }
@@ -23,7 +23,7 @@
             margin: 0;
             padding: 0;
             height: 100%;
-            overflow: hidden; /* prevent scrollbars */
+            overflow: scroll; /* prevent scrollbars */
         }
         .content{
             display: flex;
@@ -32,20 +32,28 @@
             padding-top: 50px;
             padding-left: 200px;
             padding-right: 200px;
+            padding-bottom: 50px;
             z-index: 1; /* above video */
         }
 
-        .vid_types_container{
+        .options_container{
             position: relative;
-            top: 80px;
+            margin-top: 80px;
+            width: 100%;
             align-self: center;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-around;
+        }
+        .vid_types_container{
             display: flex;
             flex-direction: column;
             align-items: center;
             background-color: gray;
             border-radius: 20px;
-            height: 100%;
-            width: 30%;
+            height: 500px;
+            width: 300px;
+            overflow: scroll;
         }
         .videos{
             margin: 20px;
@@ -160,40 +168,72 @@
     <source src="{%  static 'downloader/videos/Abstract-White-Background.mp4' %}" type="video/mp4">
 </video>
 <div class="content">
+<img src="{%  static 'downloader/pictures/Logo.png' %}" alt="S-Downloader" style="width: 300px; height: auto;">
 {#make the below {{ title }}#}
     <h1>{{ title }}</h1>
 
+    <div class="options_container">
+        <div class="vid_types_container">
+        <h1>Video's</h1>
+            <div class="videos">
+                    <ul>
+                        {% for res in resolutions %}
+                            <li><div class="submit-button-container">
 
-    <div class="vid_types_container">
-    <div class="videos">
-            <ul>
-                {% for res in resolutions %}
-                    <li><div class="submit-button-container">
+                        <button class="animated-button"  onclick='window.open("{{ res.url }}")'>
+                        <svg viewBox="0 0 24 24" class="arr-2" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                              d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"
+                            ></path>
+                        </svg>
+                        <span class="text">{{ res.resolution }}</span>
+                        <span class="circle"></span>
+                        <svg viewBox="0 0 24 24" class="arr-1" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                            d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"
+                            ></path>
+                        </svg>
+                    </button>
+                    </div>
+                            {% if res.is_progressive != True %}
+                            <h5>Without Audio</h5>
+                            {% endif %}
+                            </li>
+                        {% endfor %}
 
-                <button class="animated-button"  onclick='window.open("{{ res.url }}")'>
-                <svg viewBox="0 0 24 24" class="arr-2" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                      d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"
-                    ></path>
-                </svg>
-                <span class="text">{{ res.resolution }}</span>
-                <span class="circle"></span>
-                <svg viewBox="0 0 24 24" class="arr-1" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                    d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"
-                    ></path>
-                </svg>
-            </button>
+                    </ul>
             </div>
-                    {% if res.is_progressive != True %}
-                    <h5>Without Audio</h5>
-                    {% endif %}
-                    </li>
-                {% endfor %}
 
-            </ul>
-    </div>
+        </div>
+        <div class="vid_types_container">
+        <h1>Audio's</h1>
+            <div class="videos">
+                <ul>
+                        {% for audio in audios %}
+                            <li><div class="submit-button-container">
 
+                        <button class="animated-button"  onclick='window.open("{{ audio.url }}")'>
+                        <svg viewBox="0 0 24 24" class="arr-2" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                              d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"
+                            ></path>
+                        </svg>
+                        <span class="text">{{ audio.abr }}</span>
+                        <span class="circle"></span>
+                        <svg viewBox="0 0 24 24" class="arr-1" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                            d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"
+                            ></path>
+                        </svg>
+                    </button>
+                    </div>
+                            </li>
+                        {% endfor %}
+
+                    </ul>
+            </div>
+
+        </div>
     </div>
 </div>
 </body>

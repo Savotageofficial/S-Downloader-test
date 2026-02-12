@@ -3,22 +3,22 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>S-Downloader</title>
     <style>
         body, html {
             margin: 0;
             padding: 0;
             height: 100%;
-            overflow: hidden; /* prevent scrollbars */
+            overflow: scroll;
         }
         #bg-video {
             position: fixed;
             top: 0;
             left: 0;
-            min-width: 100%;
-            min-height: 100%;
-            width: fit-content;
-            height: fit-content;
+            max-width: 100%;
+            {#max-height: 100%;#}
+            {#width: fit-content;#}
+            {#height: fit-content;#}
             z-index: -1; /* behind content */
             {#object-fit: cover; /* cover the screen */#}
         }
@@ -167,7 +167,8 @@
         <source src="{%  static 'downloader/videos/Abstract-White-Background.mp4' %}" type="video/mp4">
     </video>
     <div class="content">
-    <h1>S-Downloader</h1>
+{#    <h1>S-Downloader</h1>#}
+        <img src="{%  static 'downloader/pictures/Logo.png' %}" alt="S-Downloader" style="width: 300px; height: auto;">
     <form class="form__group field" method="POST" action="{% url 'show_download_options' %}">
         {% csrf_token %}
         <input type="input" class="form__field" placeholder="Link" name="link" required>
