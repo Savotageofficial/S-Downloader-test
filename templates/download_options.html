@@ -3,12 +3,31 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>S-Downloader</title>
     <style>
         *{
             font-family: Arial;
         }
-        #bg-video {
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: scroll; /* prevent scrollbars */
+        }
+        @media screen and (min-width: 500px) {
+            .content {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                padding-top: 50px;
+                padding-left: 200px;
+                padding-right: 200px;
+                padding-bottom: 50px;
+                z-index: 1; /* above video */
+            }
+            #bg-video {
             position: fixed;
             top: 0;
             left: 0;
@@ -19,21 +38,23 @@
             z-index: -1; /* behind content */
             {#object-fit: cover; /* cover the screen */#}
         }
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            overflow: scroll; /* prevent scrollbars */
         }
-        .content{
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding-top: 50px;
-            padding-left: 200px;
-            padding-right: 200px;
-            padding-bottom: 50px;
-            z-index: 1; /* above video */
+        @media screen and (max-width: 500px) {
+            .content {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                padding-top: 50px;
+                padding-bottom: 50px;
+                z-index: 1; /* above video */
+            }
+            #bg-video{
+               position: fixed;
+                top: 0;
+                left: 0;
+               z-index: -1;
+               object-fit: cover;
+          }
         }
 
         .options_container{

@@ -3,57 +3,115 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>S-Downloader</title>
     <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            overflow: scroll;
-        }
-        #bg-video {
-            position: fixed;
-            top: 0;
-            left: 0;
-            max-width: 100%;
-            {#max-height: 100%;#}
-            {#width: fit-content;#}
-            {#height: fit-content;#}
-            z-index: -1; /* behind content */
+        @media screen and (min-width: 500px) {
+            body, html {
+                margin: 0;
+                padding: 0;
+                height: 100%;
+                overflow: scroll;
+            }
+            .logo{
+                width: 300px;
+                height: auto;
+            }
+
+            #bg-video {
+                position: fixed;
+                top: 0;
+                left: 0;
+                max-width: 100%;
+            {#max-height: 100%;#}{#width: fit-content;#}{#height: fit-content;#} z-index: -1; /* behind content */
             {#object-fit: cover; /* cover the screen */#}
+            }
+
+            .content {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                z-index: 1; /* above video */
+                font-family: Arial, sans-serif;
+            }
+            .form__group {
+                top: 150px;
+              position: relative;
+              padding: 20px 0 0;
+              width: 100%;
+              max-width: 380px;
+            }
+            .form__field {
+              font-family: inherit;
+              width: 100%;
+              border: none;
+              border-bottom: 2px solid #9b9b9b;
+              outline: 0;
+              font-size: 17px;
+              color: #000;
+              padding: 7px 0;
+              background: transparent;
+              transition: border-color 0.2s;
+            }
         }
-        .content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            z-index: 1; /* above video */
-            font-family: Arial, sans-serif;
+        @media screen and (max-width: 500px) {
+            body, html {
+                margin: 0;
+                padding: 0;
+                height: 100%;
+                overflow: scroll;
+            }
+           #bg-video{
+               position: fixed;
+                top: 0;
+                left: 0;
+               z-index: -1;
+               object-fit: cover;
+          }
+            .content {
+                position: relative;
+                top: 10vh;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                z-index: 1; /* above video */
+                font-family: Arial, sans-serif;
+            }
+            .logo{
+                width: 280px;
+                height: auto;
+                margin-bottom: -80px;
+            }
+            .form__group {
+              top: 150px;
+              position: relative;
+              padding: 20px 0 0;
+              width: 50vw;
+              max-width: 500px;
+            }
+            .form__field {
+              font-family: inherit;
+              width: 100%;
+              border: none;
+              border-bottom: 2px solid #9b9b9b;
+              outline: 0;
+              font-size: 17px;
+              color: #000;
+              padding: 7px 0;
+              background: transparent;
+              transition: border-color 0.2s;
+            }
         }
         *{
             font-family: Arial;
         }
 
 
-.form__group {
-    top: 150px;
-  position: relative;
-  padding: 20px 0 0;
-  width: 100%;
-  max-width: 380px;
-}
 
-.form__field {
-  font-family: inherit;
-  width: 100%;
-  border: none;
-  border-bottom: 2px solid #9b9b9b;
-  outline: 0;
-  font-size: 17px;
-  color: #000;
-  padding: 7px 0;
-  background: transparent;
-  transition: border-color 0.2s;
-}
+
+
+
+
 
 .form__field::placeholder {
   color: transparent;
@@ -168,7 +226,7 @@
     </video>
     <div class="content">
 {#    <h1>S-Downloader</h1>#}
-        <img src="{%  static 'downloader/pictures/Logo.png' %}" alt="S-Downloader" style="width: 300px; height: auto;">
+        <img class="logo" src="{%  static 'downloader/pictures/Logo.png' %}" alt="S-Downloader">
     <form class="form__group field" method="POST" action="{% url 'show_download_options' %}">
         {% csrf_token %}
         <input type="input" class="form__field" placeholder="Link" name="link" required>

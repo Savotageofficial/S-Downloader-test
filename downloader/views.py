@@ -11,10 +11,11 @@ from pytubefix.exceptions import VideoUnavailable, RegexMatchError
 
 def home(request):
 
-    file = open("D:\S-Downloader-test\me-as-an-emperor.png" , "rb")
+    # file = open("D:\S-Downloader-test\me-as-an-emperor.png" , "rb")
 
 
     # return FileResponse(file , as_attachment=True, filename="me-as-an-emperor.png")
+    print("someone is opening the link")
     return render(request, "home.html")
 
 
