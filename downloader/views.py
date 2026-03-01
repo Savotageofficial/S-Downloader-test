@@ -8,6 +8,17 @@ from pytubefix.exceptions import VideoUnavailable, RegexMatchError
 
 # Create your views here.
 
+def get_client_ip(request):
+    """
+    Returns the IP of the request, accounting for the possibility of being behind a proxy.
+    """
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        # The first IP in the list is typically the original client IP.
+        ip = x_forwarded_for.split(',')[0].strip()
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
 
 def home(request):
 
@@ -15,7 +26,7 @@ def home(request):
 
 
     # return FileResponse(file , as_attachment=True, filename="me-as-an-emperor.png")
-    print("someone is opening the link")
+    print(f"someone is opening the link from{get_client_ip(request)}")
     return render(request, "home.html")
 
 
