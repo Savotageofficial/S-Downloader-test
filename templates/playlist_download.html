@@ -1,0 +1,264 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S-Downloader</title>
+
+    <style>
+        .submit-button-container{
+            max-width: 200px;
+            align-self: center;
+            margin-bottom: 10px;
+        }
+        .animated-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 16px 36px;
+  border: 4px solid;
+  border-color: transparent;
+  font-size: 16px;
+  background-color: inherit;
+  border-radius: 100px;
+  font-weight: 600;
+  color: #00bf5f;
+  box-shadow: 0 0 0 2px #00bf5f;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-button svg {
+  position: absolute;
+  width: 24px;
+  fill: #00bf5f;
+  z-index: 9;
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-button .arr-1 {
+  right: 16px;
+}
+
+.animated-button .arr-2 {
+  left: -25%;
+}
+
+.animated-button .circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  background-color: #00bf5f;
+  border-radius: 50%;
+  opacity: 0;
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-button .text {
+  position: relative;
+  z-index: 1;
+  transform: translateX(-12px);
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-button:hover {
+  box-shadow: 0 0 0 12px transparent;
+  color: #212121;
+  border-radius: 12px;
+}
+
+.animated-button:hover .arr-1 {
+  right: -25%;
+}
+
+.animated-button:hover .arr-2 {
+  left: 16px;
+}
+
+.animated-button:hover .text {
+  transform: translateX(12px);
+}
+
+.animated-button:hover svg {
+  fill: #212121;
+}
+
+.animated-button:active {
+  scale: 0.95;
+  box-shadow: 0 0 0 4px #00bf5f;
+}
+
+.animated-button:hover .circle {
+  width: 220px;
+  height: 220px;
+  opacity: 1;
+}
+{#        ----------------------------------------#}
+        .card {
+          --bg: #e8e8e8;
+          --contrast: #e2e0e0;
+          --grey: #93a1a1;
+          position: relative;
+          padding: 9px;
+          width: 100%;
+          height: 70vh;
+          background-color: var(--bg);
+          border-radius: 35px;
+          box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;
+        }
+
+        .card-overlay {
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          background: repeating-conic-gradient(var(--bg) 0.0000001%, var(--grey) 0.000104%) 60% 60%/600% 600%;
+          filter: opacity(10%) contrast(105%);
+        }
+
+        .card-inner {
+          display: -webkit-box;
+          display: -ms-flexbox;
+          display: flex;
+            inset: 30px;
+          justify-content: center;
+          align-items: center;
+          overflow: scroll;
+          {#width: 190px;#}
+          height: 70vh;
+          background-color: var(--contrast);
+          border-radius: 30px;
+          /* Content style */
+          font-size: 30px;
+          font-weight: 900;
+          color: #c7c4c4;
+          text-align: center;
+          font-family: monospace;
+        }
+        .card-inner li{
+            list-style-type: none;
+            color: #1b1b1b;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-content: center;
+            margin-top: 20px;
+            background-color: #d1d1d1;
+            border-radius: 35px;
+        }
+        @media screen and (min-width: 500px) {
+            body, html {
+                margin: 0;
+                padding: 0;
+                height: 100%;
+                overflow: scroll;
+            }
+            .logo{
+                width: 300px;
+                height: auto;
+            }
+
+            #bg-video {
+                position: fixed;
+                top: 0;
+                left: 0;
+                max-width: 100%;
+            {#max-height: 100%;#}{#width: fit-content;#}{#height: fit-content;#} z-index: -1; /* behind content */
+            {#object-fit: cover; /* cover the screen */#}
+            }
+
+            .content {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                z-index: 1; /* above video */
+                font-family: Arial, sans-serif;
+            }
+        }
+        @media screen and (max-width: 500px) {
+            body, html {
+                margin: 0;
+                padding: 0;
+                height: 100%;
+                overflow: scroll;
+            }
+
+            #bg-video {
+                position: fixed;
+                top: 0;
+                left: 0;
+                z-index: -1;
+                object-fit: cover;
+            }
+
+            .content {
+                position: relative;
+                top: 10vh;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                z-index: 1; /* above video */
+                font-family: Arial, sans-serif;
+            }
+
+            .logo {
+                width: 280px;
+                height: auto;
+                margin-bottom: -80px;
+            }
+        }
+        *{
+            font-family: Arial;
+        }
+    </style>
+</head>
+<body>
+    <video autoplay muted loop id="bg-video">
+        <source src="{%  static 'downloader/videos/Abstract-White-Background.mp4' %}" type="video/mp4">
+    </video>
+    <div class="content">
+        <img class="logo" src="{%  static 'downloader/pictures/Logo.png' %}" alt="S-Downloader">
+
+    <h3>The PlayList is {{ length}} Minutes Long </h3>
+
+        <form method="POST" action="{% url 'show_download_options' %}">
+            {% csrf_token %}
+            <div class="card">
+              <div class="card-overlay"></div>
+                  <div class="card-inner">
+                      <ul style="padding: 0;">
+                      {% for vid in vids %}
+                          <li>
+                              <h6>{{ vid.title }}</h6>
+                            <div class="submit-button-container" >
+
+                                <button class="animated-button" type="submit" name="link" value="{{ vid.watch_url }}">
+                                <svg viewBox="0 0 24 24" class="arr-2" xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                      d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"
+                                    ></path>
+                                </svg>
+                                <span class="text">Download</span>
+                                <span class="circle"></span>
+                                <svg viewBox="0 0 24 24" class="arr-1" xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                    d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"
+                                    ></path>
+                                </svg>
+                            </button>
+                          </div>
+{#                        <hr style="margin: 0; height: 5px; background-color: #1b1b1b">#}
+                      {% endfor %}
+                      </ul>
+                  </div>
+            </div>
+        </form>
+    </div>
+
+</body>
+</html>

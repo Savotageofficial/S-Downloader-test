@@ -2,7 +2,7 @@ from django.http import HttpResponse, FileResponse
 from django.shortcuts import render, redirect
 from django.template import loader
 from django.views.decorators.csrf import csrf_protect
-from pytubefix import YouTube
+from pytubefix import YouTube, Playlist
 from pytubefix.exceptions import VideoUnavailable, RegexMatchError
 
 
@@ -34,7 +34,7 @@ def home(request):
 def show_download_options(request):
 
 
-    def is_valid_youtube_link(link: str) -> bool:
+    def is_valid_youtube_video_link(link: str) -> bool:
         try:
             yt = YouTube(link)
             # Force fetch to confirm the video exists
@@ -49,7 +49,8 @@ def show_download_options(request):
     # resolutions = ["1080p" , "720p" , "480p" , "360p" , "240p"]
     link = request.POST.get("link")
 
-    if is_valid_youtube_link(link):
+    if is_valid_youtube_video_link(link):
+        print("video detected")
         lv = []
         lresolutions = []
         yt = YouTube(link)
@@ -66,6 +67,16 @@ def show_download_options(request):
                     lv.append(j)
 
         return render(request, "download_options.html" , {"resolutions": lv, "title" : yt.title , "audios": audio_types})
+    elif "playlist" in link:
+        print("playlist detected")
+        vids = []
+        length = 0
+        p = Playlist(link)
+        for vid in p.videos:
+            vids.append(vid)
+            length += int(vid.length)
+        length = length // 60
+        return render(request , "playlist_download.html", {"vids": vids , "length": length})
     else:
         return HttpResponse("Invalid link brother.....")
 
