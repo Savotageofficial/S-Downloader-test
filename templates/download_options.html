@@ -219,6 +219,9 @@
 </video>
 <div class="content">
 <img src="{%  static 'downloader/pictures/Logo.png' %}" alt="S-Downloader" style="width: 300px; height: auto;">
+    <video loop id="preview-video">
+        <source src="{{ preview.url }}" type="video/mp4">
+    </video>
 {#make the below {{ title }}#}
     <h1>{{ title }}</h1>
 

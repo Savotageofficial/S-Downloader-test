@@ -56,8 +56,6 @@ def show_download_options(request):
         yt = YouTube(link)
         resolutionsvid = yt.streams.order_by('resolution').filter(mime_type='video/mp4')
         audio_types = yt.streams.get_default_audio_track()
-        print(audio_types)
-        print(resolutionsvid)
         for j in resolutionsvid:
             if (j.is_progressive == True):
                 lv.append(j)
@@ -66,7 +64,15 @@ def show_download_options(request):
                 if (j.resolution not in lresolutions):
                     lv.append(j)
 
-        return render(request, "download_options.html" , {"resolutions": lv, "title" : yt.title , "audios": audio_types})
+        if len(resolutionsvid) >= 3:
+            preview = lv[2]
+        else:
+            preview = lv[0]
+
+        print(lv)
+        print(audio_types)
+        print(preview)
+        return render(request, "download_options.html" , {"resolutions": lv, "title" : yt.title , "audios": audio_types , "preview": preview})
     elif "playlist" in link:
         print("playlist detected")
         vids = []
