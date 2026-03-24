@@ -1,4 +1,4 @@
-from django.http import HttpResponse, FileResponse
+from django.http import HttpResponse, FileResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.template import loader
 from django.views.decorators.csrf import csrf_protect
@@ -72,7 +72,8 @@ def show_download_options(request):
         print(lv)
         print(audio_types)
         print(preview)
-        return render(request, "download_options.html" , {"resolutions": lv, "title" : yt.title , "audios": audio_types , "preview": preview})
+        # return render(request, "download_options.html" , {"resolutions": lv, "title" : yt.title , "audios": audio_types , "preview": preview})
+        return JsonResponse( data= {"resolutions": lv, "title": yt.title, "audios": audio_types, "preview": preview})
     elif "playlist" in link:
         print("playlist detected")
         vids = []
@@ -82,7 +83,8 @@ def show_download_options(request):
             vids.append(vid)
             length += int(vid.length)
         length = length // 60
-        return render(request , "playlist_download.html", {"vids": vids , "length": length})
+        return JsonResponse(data= {"vids": vids , "length": length})
+        #return render(request , "playlist_download.html", {"vids": vids , "length": length})
     else:
         return HttpResponse("Invalid link brother.....")
 
