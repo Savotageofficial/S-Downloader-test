@@ -1,12 +1,9 @@
 from django.http import HttpResponse, FileResponse, JsonResponse
 from django.shortcuts import render, redirect
-from django.template import loader
-from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.csrf import ensure_csrf_cookie
 from pytubefix import YouTube, Playlist
 from pytubefix.exceptions import VideoUnavailable, RegexMatchError
 
-
-# Create your views here.
 
 def get_client_ip(request):
     """
@@ -14,87 +11,115 @@ def get_client_ip(request):
     """
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
     if x_forwarded_for:
-        # The first IP in the list is typically the original client IP.
         ip = x_forwarded_for.split(',')[0].strip()
     else:
         ip = request.META.get('REMOTE_ADDR')
     return ip
 
+
+@ensure_csrf_cookie
 def home(request):
-
-    # file = open("D:\S-Downloader-test\me-as-an-emperor.png" , "rb")
-
-
-    # return FileResponse(file , as_attachment=True, filename="me-as-an-emperor.png")
-    print(f"someone is opening the link from{get_client_ip(request)}")
+    print(f"someone is opening the link from {get_client_ip(request)}")
     return render(request, "home.html")
-
 
 
 def show_download_options(request):
 
-
     def is_valid_youtube_video_link(link: str) -> bool:
         try:
             yt = YouTube(link)
-            # Force fetch to confirm the video exists
             _ = yt.title
-
             return True
         except (VideoUnavailable, RegexMatchError, Exception):
             return False
 
-
-
-    # resolutions = ["1080p" , "720p" , "480p" , "360p" , "240p"]
     link = request.POST.get("link")
 
-    if is_valid_youtube_video_link(link):
-        print("video detected")
-        lv = []
-        lresolutions = []
-        yt = YouTube(link)
-        resolutionsvid = yt.streams.order_by('resolution').filter(mime_type='video/mp4')
-        audio_types = yt.streams.get_default_audio_track()
-        for j in resolutionsvid:
-            if (j.is_progressive == True):
-                lv.append(j)
-                lresolutions.append(j.resolution)
-            elif ("av01" in j.video_codec):
-                if (j.resolution not in lresolutions):
+    if not link:
+        return JsonResponse({"type": "error", "message": "No link provided"}, status=400)
+
+    try:
+        if is_valid_youtube_video_link(link):
+            print("video detected")
+            lv = []
+            lresolutions = []
+            yt = YouTube(link)
+            resolutionsvid = yt.streams.order_by('resolution').filter(mime_type='video/mp4')
+            audio_tracks = yt.streams.get_default_audio_track()
+
+            for j in resolutionsvid:
+                if j.is_progressive:
                     lv.append(j)
+                    lresolutions.append(j.resolution)
+                elif "av01" in j.video_codec:
+                    if j.resolution not in lresolutions:
+                        lv.append(j)
 
-        if len(resolutionsvid) >= 3:
-            preview = lv[2]
+            # Serialize video streams to plain dicts
+            video_options = []
+            for stream in lv:
+                video_options.append({
+                    "resolution": stream.resolution,
+                    "url": stream.url,
+                    "is_progressive": stream.is_progressive,
+                    "filesize": stream.filesize,
+                })
+
+            # Serialize audio streams to plain dicts
+            audio_options = []
+            if audio_tracks:
+                try:
+                    for stream in audio_tracks:
+                        audio_options.append({
+                            "abr": stream.abr,
+                            "url": stream.url,
+                            "filesize": stream.filesize,
+                        })
+                except TypeError:
+                    # Single stream object, not iterable
+                    audio_options.append({
+                        "abr": audio_tracks.abr,
+                        "url": audio_tracks.url,
+                        "filesize": audio_tracks.filesize,
+                    })
+
+            return JsonResponse({
+                "type": "video",
+                "title": yt.title,
+                "thumbnail": yt.thumbnail_url,
+                "resolutions": video_options,
+                "audio": audio_options,
+            })
+
+        elif "playlist" in link:
+            print("playlist detected")
+            vids = []
+            length = 0
+            p = Playlist(link)
+            for vid in p.videos:
+                vids.append({
+                    "title": vid.title,
+                    "watch_url": vid.watch_url,
+                    "thumbnail": vid.thumbnail_url,
+                    "length": vid.length,
+                })
+                length += int(vid.length)
+            length = length // 60
+
+            return JsonResponse({
+                "type": "playlist",
+                "title": p.title if hasattr(p, 'title') else "Playlist",
+                "length": length,
+                "videos": vids,
+            })
         else:
-            preview = lv[0]
+            return JsonResponse({"type": "error", "message": "Invalid link"}, status=400)
 
-        print(lv)
-        print(audio_types)
-        print(preview)
-        # return render(request, "download_options.html" , {"resolutions": lv, "title" : yt.title , "audios": audio_types , "preview": preview})
-        return JsonResponse( data= {"resolutions": lv, "title": yt.title, "audios": audio_types, "preview": preview})
-    elif "playlist" in link:
-        print("playlist detected")
-        vids = []
-        length = 0
-        p = Playlist(link)
-        for vid in p.videos:
-            vids.append(vid)
-            length += int(vid.length)
-        length = length // 60
-        return JsonResponse(data= {"vids": vids , "length": length})
-        #return render(request , "playlist_download.html", {"vids": vids , "length": length})
-    else:
-        return HttpResponse("Invalid link brother.....")
-
+    except Exception as e:
+        print(f"Error processing link: {e}")
+        return JsonResponse({"type": "error", "message": "Failed to process the link. Please try again."}, status=500)
 
 
 def download(request):
-
     stream = request.POST.get("stream")
-    # yt = YouTube(link)
-    # vid_title = yt.title
-    # vid_stream = yt.streams.get_highest_resolution(progressive=True)
-    # return render(request, "download_options.html" , {"vid_title": vid_title})
     return redirect(stream.url)
