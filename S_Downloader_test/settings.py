@@ -39,7 +39,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'downloader.apps.DownloaderConfig'
+    'downloader.apps.DownloaderConfig',
+    'django.contrib.sitemaps',
+    'django.contrib.sites'
 ]
 
 MIDDLEWARE = [
@@ -115,6 +117,7 @@ USE_I18N = True
 
 USE_TZ = True
 
+SITE_ID = 1
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
