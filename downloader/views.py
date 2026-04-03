@@ -31,7 +31,8 @@ def show_download_options(request):
             _ = yt.title
             return True
         except (VideoUnavailable, RegexMatchError, Exception):
-            print(f"Validation error: {e}")
+            error = str(e)
+            print(f"Validation error: {error}")
             return False
 
     link = request.POST.get("link")
