@@ -33,10 +33,6 @@ def show_download_options(request):
         except (VideoUnavailable, RegexMatchError, Exception):
             return False
 
-    print("Content-Type:", request.content_type)
-    print("POST data:", request.POST)
-    print("Body:", request.body)
-    print("Method:", request.method)
     link = request.POST.get("link")
 
     if not link:
@@ -121,7 +117,7 @@ def show_download_options(request):
 
     except Exception as e:
         print(f"Error processing link: {e}")
-        return JsonResponse({"type": "error", "message": "Failed to process the link. Please try again."}, status=500)
+        return JsonResponse({"type": "error", "message": str(e)}, status=500)
 
 
 def download(request):
