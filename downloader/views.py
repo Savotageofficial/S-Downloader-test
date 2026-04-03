@@ -1,6 +1,6 @@
 from django.http import HttpResponse, FileResponse, JsonResponse
 from django.shortcuts import render, redirect
-from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from pytubefix import YouTube, Playlist
 from pytubefix.exceptions import VideoUnavailable, RegexMatchError
 
@@ -22,7 +22,7 @@ def home(request):
     print(f"someone is opening the link from {get_client_ip(request)}")
     return render(request, "home.html")
 
-
+@csrf_exempt
 def show_download_options(request):
 
     def is_valid_youtube_video_link(link: str) -> bool:
@@ -33,6 +33,10 @@ def show_download_options(request):
         except (VideoUnavailable, RegexMatchError, Exception):
             return False
 
+    print("Content-Type:", request.content_type)
+    print("POST data:", request.POST)
+    print("Body:", request.body)
+    print("Method:", request.method)
     link = request.POST.get("link")
 
     if not link:
