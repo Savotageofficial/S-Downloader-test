@@ -27,7 +27,7 @@ def show_download_options(request):
 
     def is_valid_youtube_video_link(link: str) -> bool:
         try:
-            yt = YouTube(link)
+            yt = YouTube(link , client="WEB")
             _ = yt.title
             return True
         except (VideoUnavailable, RegexMatchError, Exception):
@@ -43,7 +43,7 @@ def show_download_options(request):
             print("video detected")
             lv = []
             lresolutions = []
-            yt = YouTube(link)
+            yt = YouTube(link , client="WEB")
             resolutionsvid = yt.streams.order_by('resolution').filter(mime_type='video/mp4')
             audio_tracks = yt.streams.get_default_audio_track()
 
