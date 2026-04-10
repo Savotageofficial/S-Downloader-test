@@ -129,110 +129,114 @@ def show_download_options(request):
     try:
         result , metadata= is_valid_youtube_url(link)
         if result["valid"]:
-            print("video detected")
+            if "playlist" in link:
+                print("playlist detected")
+                ydl_opts = {
+                    'quiet': True,
+                    'no_warnings': True,
+                    'skip_download': True,
+                    'extract_flat': True,  # only fetches metadata, doesn't resolve each video (big speedup)
+                    'youtube_include_dash_manifest': False,
+                    'nocheckcertificate': True,
+                    'socket_timeout': 10,
+                }
 
+                # with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                #     metadata = ydl.extract_info(link, download=False)
 
+                vids = []
+                length = 0
 
-            videos = get_all_mp4(metadata)
-            audios = get_all_audio(metadata)
-            video_options = []
-            for stream in videos:
-                is_progressive = stream.get("acodec") not in (None, "none")
-                video_options.append({
-                    "resolution": stream.get("format_note"),
-                    "url": stream.get("url"),
-                    "is_progressive": is_progressive,
-                    "filesize": stream.get("filesize"),
-                })
-            # lv = []
-            # lresolutions = []
-            # yt = YouTube(link , client="WEB_EMBED")
-            # resolutionsvid = yt.streams.order_by('resolution').filter(mime_type='video/mp4')
-            # audio_tracks = yt.streams.get_default_audio_track()
-            #
-            # for j in resolutionsvid:
-            #     if j.is_progressive:
-            #         lv.append(j)
-            #         lresolutions.append(j.resolution)
-            #     elif "av01" in j.video_codec:
-            #         if j.resolution not in lresolutions:
-            #             lv.append(j)
-            #
-            # # Serialize video streams to plain dicts
-            # video_options = []
-            # for stream in lv:
-            #     video_options.append({
-            #         "resolution": stream.resolution,
-            #         "url": stream.url,
-            #         "is_progressive": stream.is_progressive,
-            #         "filesize": stream.filesize,
-            #     })
-            #
-            # Serialize audio streams to plain dicts
-            audio_options = []
-            if audios:
-                try:
-                    for stream in audios:
-                        audio_options.append({
-                            "abr": stream.get("abr"),
-                            "url": stream.get("url"),
-                            "filesize": stream.get("filesize"),
-                        })
-                except TypeError:
-                    # Single stream object, not iterable
-                    audio_options.append({
-                        "abr": audios.get("abr"),
-                        "url": audios.get("url"),
-                        "filesize": audios.get("filesize"),
+                for vid in metadata.get("entries", []):
+                    duration = vid.get("duration") or 0
+                    length += int(duration)
+                    vids.append({
+                        "title": vid.get("title"),
+                        "watch_url": vid.get('original_url'),
+                        "thumbnail": vid.get("thumbnail"),
+                        "length": duration,
                     })
+                    print(vid)
+
+                    length = length // 60
+                return JsonResponse({
+                    "type": "playlist",
+                    "title": metadata.get("title", "Playlist"),
+                    "length": length,
+                    "videos": vids,
+                })
+            else:
+                print("video detected")
 
 
-            title = metadata.get("title")
-            thumbnail = metadata.get("thumbnail")
-            return JsonResponse({
-                "type": "video",
-                "title": title,
-                "thumbnail": thumbnail,
-                "resolutions": video_options,
-                "audio": audio_options,
-            })
 
-        # elif "playlist" in link:
-        #     print("playlist detected")
-        #     ydl_opts = {
-        #         'quiet': True,
-        #         'no_warnings': True,
-        #         'skip_download': True,
-        #         'extract_flat': True,  # only fetches metadata, doesn't resolve each video (big speedup)
-        #         'youtube_include_dash_manifest': False,
-        #         'nocheckcertificate': True,
-        #         'socket_timeout': 10,
-        #     }
-        #
-        #     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        #         metadata = ydl.extract_info(link, download=False)
-        #     vids = []
-        #     length = 0
-        #
-        #     for vid in metadata.get("entries", []):
-        #         duration = vid.get("duration") or 0
-        #         length += int(duration)
-        #         vids.append({
-        #             "title": vid.get("title"),
-        #             "watch_url": f"https://www.youtube.com/watch?v={vid.get('id')}",
-        #             "thumbnail": vid.get("thumbnail"),
-        #             "length": duration,
-        #         })
-        #
-        #         length = length // 60
-        #         return JsonResponse({
-        #             "type": "playlist",
-        #             "title": metadata.get("title", "Playlist"),
-        #             "length": length,
-        #             "videos": vids,
-        #         })
+                videos = get_all_mp4(metadata)
+                audios = get_all_audio(metadata)
+                video_options = []
+                for stream in videos:
+                    is_progressive = stream.get("acodec") not in (None, "none")
+                    video_options.append({
+                        "resolution": stream.get("format_note"),
+                        "url": stream.get("url"),
+                        "is_progressive": is_progressive,
+                        "filesize": stream.get("filesize"),
+                    })
+                # lv = []
+                # lresolutions = []
+                # yt = YouTube(link , client="WEB_EMBED")
+                # resolutionsvid = yt.streams.order_by('resolution').filter(mime_type='video/mp4')
+                # audio_tracks = yt.streams.get_default_audio_track()
+                #
+                # for j in resolutionsvid:
+                #     if j.is_progressive:
+                #         lv.append(j)
+                #         lresolutions.append(j.resolution)
+                #     elif "av01" in j.video_codec:
+                #         if j.resolution not in lresolutions:
+                #             lv.append(j)
+                #
+                # # Serialize video streams to plain dicts
+                # video_options = []
+                # for stream in lv:
+                #     video_options.append({
+                #         "resolution": stream.resolution,
+                #         "url": stream.url,
+                #         "is_progressive": stream.is_progressive,
+                #         "filesize": stream.filesize,
+                #     })
+                #
+                # Serialize audio streams to plain dicts
+                audio_options = []
+                if audios:
+                    try:
+                        for stream in audios:
+                            audio_options.append({
+                                "abr": stream.get("abr"),
+                                "url": stream.get("url"),
+                                "filesize": stream.get("filesize"),
+                            })
+                    except TypeError:
+                        # Single stream object, not iterable
+                        audio_options.append({
+                            "abr": audios.get("abr"),
+                            "url": audios.get("url"),
+                            "filesize": audios.get("filesize"),
+                        })
 
-            #--------------------------------
+
+                title = metadata.get("title")
+                thumbnail = metadata.get("thumbnail")
+                return JsonResponse({
+                    "type": "video",
+                    "title": title,
+                    "thumbnail": thumbnail,
+                    "resolutions": video_options,
+                    "audio": audio_options,
+                })
+
+
+
+            #--------------------------------> pytube version
         # elif "playlist" in link:
         #     print("playlist detected")
         #     vids = []
