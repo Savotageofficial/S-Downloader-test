@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 from django.views.decorators.csrf import ensure_csrf_cookie
 from pytubefix import YouTube, Playlist
 from pytubefix.exceptions import VideoUnavailable, RegexMatchError
-
+import yt_dlp
 
 def get_client_ip(request):
     """
@@ -23,97 +23,239 @@ def home(request):
     return render(request, "home.html")
 
 
+
+
+
+
+def get_all_mp4(metadata):
+    formats = metadata.get("formats", [])
+
+    best_per_resolution = {}  # resolution -> best stream so far
+
+    for f in formats:
+        if f.get("ext") != "mp4":
+            continue
+
+        resolution = f.get("resolution")
+        tbr = f.get("tbr") or 0  # total bitrate, higher = better quality
+
+        if resolution not in best_per_resolution or tbr > (best_per_resolution[resolution].get("tbr") or 0):
+            best_per_resolution[resolution] = f
+
+    return list(best_per_resolution.values())
+
+def get_all_mp4_with_audio(metadata):
+
+    formats = metadata.get("formats", [])
+
+    seen_resolutions = set()
+    new_formats = []
+
+    for f in formats:
+        # Must be mp4, and must have BOTH video and audio codecs present
+        is_mp4 = f.get("ext") == "mp4"
+        has_video = f.get("vcodec") not in (None, "none")
+        has_audio = f.get("acodec") not in (None, "none")
+
+        resolution = f.get("resolution")
+
+        if is_mp4 and has_video and has_audio and resolution not in seen_resolutions:
+            seen_resolutions.add(resolution)
+            new_formats.append(f)
+
+    return new_formats
+
+def get_all_audio(metadata):
+    formats = metadata.get("formats", [])
+
+    seen = set()
+    audio_formats = []
+
+    for f in formats:
+        # Audio-only streams: has audio codec but no video codec
+        has_audio = f.get("acodec") not in (None, "none")
+        is_audio_only = f.get("vcodec") in (None, "none")
+        isnt_webm = f.get("ext") != "webm"
+        abr = f.get("abr")  # audio bitrate
+        ext = f.get("ext")
+
+        key = (ext, abr)
+
+        if has_audio and is_audio_only and isnt_webm and key not in seen:
+            seen.add(key)
+            audio_formats.append(f)
+
+    return audio_formats
+
+
+
+
+
 def show_download_options(request):
-
-    def is_valid_youtube_video_link(link: str) -> bool:
+    def is_valid_youtube_url(url):
+        ydl_opts = {
+            'quiet': True,
+            'skip_download': True,
+            'no_warnings': True,
+            'extract_flat': False,
+            'youtube_include_dash_manifest': False,  # <-- skips fetching DASH manifest (big speedup)
+            'nocheckcertificate': True,
+            'socket_timeout': 10,
+            'extractor_args': {
+                'youtube': {
+                    'skip': ['hls', 'dash'],  # <-- skips HLS and DASH formats (only fetches direct streams)
+                }
+            }
+        }
         try:
-            yt = YouTube(link , client="WEB_EMBED")
-            _ = yt.title
-            return True
-        except (VideoUnavailable, RegexMatchError, Exception):
-            return False
-
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                metadata = ydl.extract_info(url, download=False)
+                return {"valid": True, "reason": None} , metadata
+        except yt_dlp.utils.DownloadError as e:
+            reason = str(e)
+            if "not available" in reason:
+                return {"valid": False, "reason": "Video is not available in your region or has been removed"}
+            elif "private" in reason:
+                return {"valid": False, "reason": "Video is private"}
+            elif "age" in reason:
+                return {"valid": False, "reason": "Video is age-restricted"}
+            else:
+                return {"valid": False, "reason": "Invalid or inaccessible URL"}
     link = request.POST.get("link")
 
     if not link:
         return JsonResponse({"type": "error", "message": "No link provided"}, status=400)
 
     try:
-        if is_valid_youtube_video_link(link):
+        result , metadata= is_valid_youtube_url(link)
+        if result["valid"]:
             print("video detected")
-            lv = []
-            lresolutions = []
-            yt = YouTube(link , client="WEB_EMBED")
-            resolutionsvid = yt.streams.order_by('resolution').filter(mime_type='video/mp4')
-            audio_tracks = yt.streams.get_default_audio_track()
 
-            for j in resolutionsvid:
-                if j.is_progressive:
-                    lv.append(j)
-                    lresolutions.append(j.resolution)
-                elif "av01" in j.video_codec:
-                    if j.resolution not in lresolutions:
-                        lv.append(j)
 
-            # Serialize video streams to plain dicts
+
+            videos = get_all_mp4(metadata)
+            audios = get_all_audio(metadata)
             video_options = []
-            for stream in lv:
+            for stream in videos:
+                is_progressive = stream.get("acodec") not in (None, "none")
                 video_options.append({
-                    "resolution": stream.resolution,
-                    "url": stream.url,
-                    "is_progressive": stream.is_progressive,
-                    "filesize": stream.filesize,
+                    "resolution": stream.get("format_note"),
+                    "url": stream.get("url"),
+                    "is_progressive": is_progressive,
+                    "filesize": stream.get("filesize"),
                 })
-
+            # lv = []
+            # lresolutions = []
+            # yt = YouTube(link , client="WEB_EMBED")
+            # resolutionsvid = yt.streams.order_by('resolution').filter(mime_type='video/mp4')
+            # audio_tracks = yt.streams.get_default_audio_track()
+            #
+            # for j in resolutionsvid:
+            #     if j.is_progressive:
+            #         lv.append(j)
+            #         lresolutions.append(j.resolution)
+            #     elif "av01" in j.video_codec:
+            #         if j.resolution not in lresolutions:
+            #             lv.append(j)
+            #
+            # # Serialize video streams to plain dicts
+            # video_options = []
+            # for stream in lv:
+            #     video_options.append({
+            #         "resolution": stream.resolution,
+            #         "url": stream.url,
+            #         "is_progressive": stream.is_progressive,
+            #         "filesize": stream.filesize,
+            #     })
+            #
             # Serialize audio streams to plain dicts
             audio_options = []
-            if audio_tracks:
+            if audios:
                 try:
-                    for stream in audio_tracks:
+                    for stream in audios:
                         audio_options.append({
-                            "abr": stream.abr,
-                            "url": stream.url,
-                            "filesize": stream.filesize,
+                            "abr": stream.get("abr"),
+                            "url": stream.get("url"),
+                            "filesize": stream.get("filesize"),
                         })
                 except TypeError:
                     # Single stream object, not iterable
                     audio_options.append({
-                        "abr": audio_tracks.abr,
-                        "url": audio_tracks.url,
-                        "filesize": audio_tracks.filesize,
+                        "abr": audios.get("abr"),
+                        "url": audios.get("url"),
+                        "filesize": audios.get("filesize"),
                     })
 
+
+            title = metadata.get("title")
+            thumbnail = metadata.get("thumbnail")
             return JsonResponse({
                 "type": "video",
-                "title": yt.title,
-                "thumbnail": yt.thumbnail_url,
+                "title": title,
+                "thumbnail": thumbnail,
                 "resolutions": video_options,
                 "audio": audio_options,
             })
 
-        elif "playlist" in link:
-            print("playlist detected")
-            vids = []
-            length = 0
-            p = Playlist(link)
-            for vid in p.videos:
-                vids.append({
-                    "title": vid.title,
-                    "watch_url": vid.watch_url,
-                    "thumbnail": vid.thumbnail_url,
-                    "length": vid.length,
-                })
-                length += int(vid.length)
-            length = length // 60
+        # elif "playlist" in link:
+        #     print("playlist detected")
+        #     ydl_opts = {
+        #         'quiet': True,
+        #         'no_warnings': True,
+        #         'skip_download': True,
+        #         'extract_flat': True,  # only fetches metadata, doesn't resolve each video (big speedup)
+        #         'youtube_include_dash_manifest': False,
+        #         'nocheckcertificate': True,
+        #         'socket_timeout': 10,
+        #     }
+        #
+        #     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        #         metadata = ydl.extract_info(link, download=False)
+        #     vids = []
+        #     length = 0
+        #
+        #     for vid in metadata.get("entries", []):
+        #         duration = vid.get("duration") or 0
+        #         length += int(duration)
+        #         vids.append({
+        #             "title": vid.get("title"),
+        #             "watch_url": f"https://www.youtube.com/watch?v={vid.get('id')}",
+        #             "thumbnail": vid.get("thumbnail"),
+        #             "length": duration,
+        #         })
+        #
+        #         length = length // 60
+        #         return JsonResponse({
+        #             "type": "playlist",
+        #             "title": metadata.get("title", "Playlist"),
+        #             "length": length,
+        #             "videos": vids,
+        #         })
 
-            return JsonResponse({
-                "type": "playlist",
-                "title": p.title if hasattr(p, 'title') else "Playlist",
-                "length": length,
-                "videos": vids,
-            })
+            #--------------------------------
+        # elif "playlist" in link:
+        #     print("playlist detected")
+        #     vids = []
+        #     length = 0
+        #     p = Playlist(link)
+        #     for vid in p.videos:
+        #         vids.append({
+        #             "title": vid.title,
+        #             "watch_url": vid.watch_url,
+        #             "thumbnail": vid.thumbnail_url,
+        #             "length": vid.length,
+        #         })
+        #         length += int(vid.length)
+        #     length = length // 60
+        #
+        #     return JsonResponse({
+        #         "type": "playlist",
+        #         "title": p.title if hasattr(p, 'title') else "Playlist",
+        #         "length": length,
+        #         "videos": vids,
+        #     })
         else:
-            return JsonResponse({"type": "error", "message": "Invalid link"}, status=400)
+            return JsonResponse({"type": "error", "message": result["reason"]}, status=400)
 
     except Exception as e:
         print(f"Error processing link: {e}")
