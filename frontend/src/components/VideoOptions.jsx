@@ -18,10 +18,15 @@ function VideoOptions({ data, onBack }) {
       </button>
 
       <div className="video-header">
-        {data.thumbnail && (
-          <div className="video-thumbnail-wrapper">
-            <img className="video-thumbnail" src={data.thumbnail} alt={data.title} />
-          </div>
+        {data.embed_id && (
+            <div className="video-thumbnail-wrapper">
+              {/*<img className="video-thumbnail" src={data.thumbnail} alt={data.title} />*/}
+              <iframe className="video-thumbnail" src={data.embed_id}
+                      title="YouTube video player" frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      referrerPolicy="strict-origin-when-cross-origin"
+                      allowFullScreen></iframe>
+            </div>
         )}
         <h2 className="video-title">{data.title}</h2>
       </div>

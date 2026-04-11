@@ -156,7 +156,6 @@ def show_download_options(request):
                         "thumbnail": vid.get("thumbnail"),
                         "length": duration,
                     })
-                    print(vid)
 
                     length = length // 60
                 return JsonResponse({
@@ -228,6 +227,7 @@ def show_download_options(request):
                 thumbnail = metadata.get("thumbnail")
                 return JsonResponse({
                     "type": "video",
+                    "embed_id" : f"https://www.youtube.com/embed/{ metadata.get("id")}",
                     "title": title,
                     "thumbnail": thumbnail,
                     "resolutions": video_options,
