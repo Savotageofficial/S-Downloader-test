@@ -6,4 +6,6 @@ urlpatterns = [
     path("" , views.home , name="downloader"),
     path("download_options/" , views.show_download_options , name="show_download_options"),
     path("download/" , views.download , name="download"),
+    path("robots.txt", views.robots_txt),
+
 ]

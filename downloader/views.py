@@ -266,6 +266,15 @@ def show_download_options(request):
         return JsonResponse({"type": "error", "message": "Failed to process the link. Please try again."}, status=500)
 
 
+def robots_txt(request):
+    lines = [
+        "User-agent: *",
+        "Disallow: /admin/",
+        "Sitemap: https://sdownloader.duckdns.org/",
+    ]
+    return HttpResponse("\n".join(lines), content_type="text/plain")
+
+
 def download(request):
     stream = request.POST.get("stream")
     return redirect(stream.url)
